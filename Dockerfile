@@ -1,0 +1,17 @@
+# Use the .NET SDK image (because we need build tools + watch)
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+WORKDIR /app
+
+# Copy only the csproj and restore early (cache optimization)
+COPY *.csproj ./
+RUN dotnet restore
+
+# Copy the rest of the source code
+COPY . ./
+
+# Expose the port
+EXPOSE 8080
+
+# Use dotnet watch to enable hot reload
+CMD ["dotnet", "watch", "run", "--urls=http://0.0.0.0:8080"]
