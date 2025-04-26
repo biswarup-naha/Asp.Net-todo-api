@@ -13,3 +13,4 @@ services:
       - /app/obj
     environment:
       - DOTNET_ENVIRONMENT=Development
+

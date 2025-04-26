@@ -4,7 +4,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace TodoApi.Models;
 
-public class TodoModel
+public class Todo
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
