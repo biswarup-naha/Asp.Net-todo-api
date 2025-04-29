@@ -1,16 +1,23 @@
+using DotNetEnv;
 using TodoApi.Models;
 using TodoApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Load .env file
+Env.Load();
 
-builder.Services.Configure<TodoDatabaseSettings>(
-    builder.Configuration.GetSection("TodoDatabase"));
+// Read from .env
+string mongoUri = Environment.GetEnvironmentVariable("MONGO_URI");
+
+// Inject it into configuration system manually
+builder.Configuration["TodoDatabase:ConnectionString"] = mongoUri;
+
+builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("TodoDatabase"));
 
 builder.Services.AddSingleton(sp =>
 {
-    var settings = builder.Configuration.GetSection("TodoDatabase").Get<TodoDatabaseSettings>();
+    var settings = builder.Configuration.GetSection("TodoDatabase").Get<DatabaseSettings>();
     return new TodoService(settings);
 });
 

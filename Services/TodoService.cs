@@ -8,7 +8,7 @@ public class TodoService
 {
     private readonly IMongoCollection<Todo> _todos;
 
-    public TodoService(TodoDatabaseSettings settings)
+    public TodoService(DatabaseSettings settings)
     {
         var client = new MongoClient(settings.ConnectionString);
         var database = client.GetDatabase(settings.DatabaseName);

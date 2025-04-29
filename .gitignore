@@ -20,6 +20,7 @@ ScaffoldingReadMe.txt
 
 # Configs
 appsettings*.json
+.env
 
 # Docker files
 docker-compose.override.yml
