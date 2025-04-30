@@ -19,11 +19,11 @@ public class TodoService
 
     public async Task<Todo> GetById(string id) => await _todos.Find(todo => todo.Id == id).FirstOrDefaultAsync();
 
-    public async void Add(Todo todo) => await _todos.InsertOneAsync(todo);
+    public async Task Add(Todo todo) => await _todos.InsertOneAsync(todo);
 
-    public async void Update(string id, Todo updatedTodo) =>
+    public async Task Update(string id, Todo updatedTodo) =>
         await _todos.ReplaceOneAsync(todo => todo.Id == id, updatedTodo);
 
-    public async void Delete(string id) =>
+    public async Task Delete(string id) =>
         await _todos.DeleteOneAsync(todo => todo.Id == id);
 }
