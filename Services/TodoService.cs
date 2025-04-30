@@ -15,15 +15,15 @@ public class TodoService
         _todos = database.GetCollection<Todo>(settings.TodoCollectionName);
     }
 
-    public List<Todo> GetAll() => _todos.Find(todo => true).ToList();
+    public async Task<List<Todo>> GetAll() => await _todos.Find(todo => true).ToListAsync();
 
-    public Todo GetById(string id) => _todos.Find(todo => todo.Id == id).FirstOrDefault();
+    public async Task<Todo> GetById(string id) => await _todos.Find(todo => todo.Id == id).FirstOrDefaultAsync();
 
-    public void Add(Todo todo) => _todos.InsertOne(todo);
+    public async void Add(Todo todo) => await _todos.InsertOneAsync(todo);
 
-    public void Update(string id, Todo updatedTodo) =>
-        _todos.ReplaceOne(todo => todo.Id == id, updatedTodo);
+    public async void Update(string id, Todo updatedTodo) =>
+        await _todos.ReplaceOneAsync(todo => todo.Id == id, updatedTodo);
 
-    public void Delete(string id) =>
-        _todos.DeleteOne(todo => todo.Id == id);
+    public async void Delete(string id) =>
+        await _todos.DeleteOneAsync(todo => todo.Id == id);
 }

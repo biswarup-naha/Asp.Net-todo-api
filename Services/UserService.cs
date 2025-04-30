@@ -35,7 +35,7 @@ public class UserService
     {
         var userCursor = await _users.FindAsync(user => user.Id == id);
         var user = await userCursor.FirstOrDefaultAsync();
-        if (user is not null)
+        if (user != null)
         {
             return BCrypt.Net.BCrypt.Verify(password, user.Password);
         }

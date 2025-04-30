@@ -10,7 +10,7 @@ namespace TodoApi.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserService _userService;
-        // private readonly JwtSettings _jwtSettings;
+        private readonly JwtSettings _jwtSettings;
 
         public UserController(UserService userService)
         {
