@@ -1,18 +1,12 @@
-using DotNetEnv;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using TodoApi.Models;
 using TodoApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load .env file
-Env.Load();
-
-// Read from .env
-string mongoUri = Environment.GetEnvironmentVariable("MONGO_URI");
-
-// Inject it into configuration system manually
-builder.Configuration["TodoDatabase:ConnectionString"] = mongoUri;
-
+// DB connection settings
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("TodoDatabase"));
 
 builder.Services.AddSingleton(sp =>
@@ -21,9 +15,24 @@ builder.Services.AddSingleton(sp =>
     return new TodoService(settings);
 });
 
+// DI and Configuration settings
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]))
+        };
+    });
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-// builder.Services.AddSwaggerGen();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
@@ -50,10 +59,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Middlewares
+app.UseCors(builder =>
+{
+    builder.AllowAnyOrigin();
+    builder.AllowAnyHeader();
+    builder.AllowAnyMethod();
+});
+app.UseAuthentication();
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

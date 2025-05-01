@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TodoApi.Models;
@@ -12,6 +13,7 @@ namespace TodoApi.Controllers
     {
         private readonly TodoService _todoService = todoService;
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<List<Todo>>> GetAll()
         {
@@ -37,6 +39,7 @@ namespace TodoApi.Controllers
             
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<Todo>> GetById(string id)
         {
@@ -61,6 +64,7 @@ namespace TodoApi.Controllers
            
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<Todo>> Add(Todo todo)
         {
@@ -85,6 +89,7 @@ namespace TodoApi.Controllers
                
         }
 
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<ActionResult> Update(string id, Todo todo)
         {
@@ -108,6 +113,7 @@ namespace TodoApi.Controllers
             }
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(string id)
         {

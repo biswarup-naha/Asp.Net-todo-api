@@ -19,26 +19,22 @@ public class UserService
 
     public async Task<User> GetById(string id) => await _users.Find(user => user.Id == id).FirstOrDefaultAsync();
 
-    public async void Add(User user){
+    public async Task Add(User user){
         user.Password= BCrypt.Net.BCrypt.HashPassword(user.Password, BCrypt.Net.BCrypt.GenerateSalt(10));
 
         await _users.InsertOneAsync(user);
     }
 
-    public async void Update(string id, User updatedUser) =>
+    public async Task Update(string id, User updatedUser) =>
         await _users.ReplaceOneAsync(user => user.Id == id, updatedUser);
 
-    public async void Delete(string id) =>
+    public async Task Delete(string id) =>
         await _users.DeleteOneAsync(user => user.Id == id);
 
-    public async Task<bool> CheckPassword(string id, string password)
-    {
-        var userCursor = await _users.FindAsync(user => user.Id == id);
-        var user = await userCursor.FirstOrDefaultAsync();
-        if (user != null)
-        {
-            return BCrypt.Net.BCrypt.Verify(password, user.Password);
-        }
-        return false;
-    }
+    public async Task<User> GetByEmail(string email) =>
+        await _users.Find(user => user.Email == email).FirstOrDefaultAsync();
+
+    public bool CheckPassword(User user, string password)=>
+        BCrypt.Net.BCrypt.Verify(password, user.Password);
+
 }

@@ -1,7 +1,14 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using TodoApi.Models;
 using TodoApi.Services;
+using TodoApi.Utils;
 
 namespace TodoApi.Controllers
 {
@@ -10,46 +17,177 @@ namespace TodoApi.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserService _userService;
-        private readonly JwtSettings _jwtSettings;
+        private readonly IConfiguration _configuration;
 
-        public UserController(UserService userService)
+        public UserController(UserService userService, IConfiguration configuration)
         {
             _userService = userService;
+            _configuration = configuration;
         }
 
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginDto loginDto)
+        {
+            var user = await _userService.GetByEmail(loginDto.Email);
+            if (user != null && _userService.CheckPassword(user, loginDto.Password))
+            {
+                var claims = new List<Claim>
+                {
+                    new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
+                    new Claim(JwtRegisteredClaimNames.Jti, new Guid().ToString()),
+                    new Claim("UserId", user.Id.ToString()),
+                    new Claim("Email", user.Email.ToString()),
+                    new Claim("Name", user.Name.ToString()),
+                    new Claim("Phone", user.Phone.ToString())
+                };
+
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]));
+                var token = new JwtSecurityToken(
+                    issuer: _configuration["Jwt:Issuer"],
+                    audience: _configuration["Jwt:Audience"],
+                    claims,
+                    expires: DateTime.UtcNow.AddMinutes(int.Parse(_configuration["Jwt:ExpiryInMinutes"])), signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
+                    );
+                var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+                return Ok(new ApiResponse<UserDto>
+                {
+                    Success = true,
+                    Message = "Login successful",
+                    Data = new UserDto
+                    {
+                        Id = user.Id,
+                        Name = user.Name,
+                        Email = user.Email,
+                        Phone = user.Phone
+                    },
+                    Token = tokenString
+                });
+            }
+            return BadRequest(new ApiResponse<string>
+            {
+                Success = false,
+                Message = "Invalid credentials"
+            });
+        }
+
+        [Authorize]
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            var users = _userService.GetAll();
-            return Ok(users);
+            try
+            {
+                var users = await _userService.GetAll();
+                return Ok(new ApiResponse<List<User>>
+                {
+                    Success = true,
+                    Message = "Users fetched",
+                    Data = users
+                });
+            }
+            catch (System.Exception)
+            {
+                return BadRequest(new ApiResponse<List<User>>
+                {
+                    Success = false,
+                    Message = "Users not found"
+                });
+            }
         }
 
+        [Authorize]
         [HttpGet("{id}")]
-        public IActionResult GetById(string id)
+        public async Task<IActionResult> GetById(string id)
         {
-            var user = _userService.GetById(id);
-            return Ok(user);
+            try
+            {
+                var user = await _userService.GetById(id);
+                return Ok(new ApiResponse<User>
+                {
+                    Success = true,
+                    Message = "User fetched",
+                    Data = user
+                });
+            }
+            catch (System.Exception)
+            {
+                return BadRequest(new ApiResponse<User>
+                {
+                    Success = false,
+                    Message = "User not found"
+                });
+            }
         }
 
+        [Authorize]
         [HttpPost]
-        public IActionResult Add(User user)
+        public async Task<IActionResult> Add(User user)
         {
-            _userService.Add(user);
-            return Ok();
+            try
+            {
+                await _userService.Add(user);
+                return Ok(new ApiResponse<User>
+                {
+                    Success = true,
+                    Message = "User added",
+                    Data = user
+                });
+            }
+            catch (System.Exception)
+            {
+                return BadRequest(new ApiResponse<User>
+                {
+                    Success = false,
+                    Message = "User not added"
+                });
+            }
         }
 
+        [Authorize]
         [HttpPut("{id}")]
-        public IActionResult Update(string id, User user)
+        public async Task<IActionResult> Update(string id, User user)
         {
-            _userService.Update(id, user);
-            return Ok();
+            try
+            {
+                await _userService.Update(id, user);
+                return Ok(new ApiResponse<User>
+                {
+                    Success = true,
+                    Message = "User updated",
+                    Data = user
+                });
+            }
+            catch (System.Exception)
+            {
+                return NotFound(new ApiResponse<User>
+                {
+                    Success = false,
+                    Message = "User with this id not found"
+                });
+            }
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
-        public IActionResult Delete(string id)
+        public async Task<IActionResult> Delete(string id)
         {
-            _userService.Delete(id);
-            return Ok();
+            try
+            {
+                await _userService.Delete(id);
+                return Ok(new ApiResponse<User>
+                {
+                    Success = true,
+                    Message = "User deleted"
+                });
+            }
+            catch (System.Exception)
+            {
+                return NotFound(new ApiResponse<User>
+                {
+                    Success = false,
+                    Message = "User with this id not found"
+                });
+            }
         }
     }
 }
