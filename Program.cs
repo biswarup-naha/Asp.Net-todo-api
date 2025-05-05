@@ -15,6 +15,12 @@ builder.Services.AddSingleton(sp =>
     return new TodoService(settings);
 });
 
+builder.Services.AddSingleton(sp =>
+{
+    var settings = builder.Configuration.GetSection("TodoDatabase").Get<DatabaseSettings>();
+    return new UserService(settings);
+});
+
 // DI and Configuration settings
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

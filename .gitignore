@@ -19,7 +19,7 @@ ScaffoldingReadMe.txt
 .vs/
 
 # Configs
-appsettings*.json
+appsettings.json
 .env
 
 # Docker files

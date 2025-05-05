@@ -10,7 +10,7 @@ public class RegisterDto
 
     [Required]
     [Range(1000000000, 9999999999)]
-    public string? Phone { get; set; }
+    public long? Phone { get; set; }
 
     [Required]
     [EmailAddress]

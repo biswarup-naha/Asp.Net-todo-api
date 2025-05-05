@@ -25,21 +25,39 @@ namespace TodoApi.Controllers
             _configuration = configuration;
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginDto loginDto)
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
-            var user = await _userService.GetByEmail(loginDto.Email);
-            if (user != null && _userService.CheckPassword(user, loginDto.Password))
+            try
             {
-                var claims = new List<Claim>
+                if (await _userService.GetByEmail(registerDto.Email) != null)
                 {
-                    new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
-                    new Claim(JwtRegisteredClaimNames.Jti, new Guid().ToString()),
-                    new Claim("UserId", user.Id.ToString()),
-                    new Claim("Email", user.Email.ToString()),
-                    new Claim("Name", user.Name.ToString()),
-                    new Claim("Phone", user.Phone.ToString())
+                    return BadRequest(new ApiResponse<string>
+                    {
+                        Success = false,
+                        Message = "User already exists"
+                    });
+                }
+                var user = new User
+                {
+                    Id = "",
+                    Name = registerDto.Name,
+                    Email = registerDto.Email,
+                    Phone = (long)registerDto.Phone,
+                    Password = registerDto.Password
                 };
+    
+                await _userService.Add(user);
+
+                var claims = new List<Claim>
+                    {
+                        new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
+                        new Claim(JwtRegisteredClaimNames.Jti, new Guid().ToString()),
+                        new Claim("UserId", user.Id.ToString()),
+                        new Claim("Email", user.Email.ToString()),
+                        new Claim("Name", user.Name.ToString()),
+                        new Claim("Phone", user.Phone.ToString())
+                    };
 
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]));
                 var token = new JwtSecurityToken(
@@ -53,7 +71,7 @@ namespace TodoApi.Controllers
                 return Ok(new ApiResponse<UserDto>
                 {
                     Success = true,
-                    Message = "Login successful",
+                    Message = "User registered",
                     Data = new UserDto
                     {
                         Id = user.Id,
@@ -64,11 +82,71 @@ namespace TodoApi.Controllers
                     Token = tokenString
                 });
             }
-            return BadRequest(new ApiResponse<string>
+            catch (System.Exception e)
+            {                
+                return BadRequest(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "Something went wrong: "+e.Message
+                });
+            }
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+        {
+            try
             {
-                Success = false,
-                Message = "Invalid credentials"
-            });
+                var user = await _userService.GetByEmail(loginDto.Email);
+                if (user != null && _userService.CheckPassword(user, loginDto.Password))
+                {
+                    var claims = new List<Claim>
+                    {
+                        new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
+                        new Claim(JwtRegisteredClaimNames.Jti, new Guid().ToString()),
+                        new Claim("UserId", user.Id.ToString()),
+                        new Claim("Email", user.Email.ToString()),
+                        new Claim("Name", user.Name.ToString()),
+                        new Claim("Phone", user.Phone.ToString())
+                    };
+    
+                    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]));
+                    var token = new JwtSecurityToken(
+                        issuer: _configuration["Jwt:Issuer"],
+                        audience: _configuration["Jwt:Audience"],
+                        claims,
+                        expires: DateTime.UtcNow.AddMinutes(int.Parse(_configuration["Jwt:ExpiryInMinutes"])), signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
+                        );
+                    var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+    
+                    return Ok(new ApiResponse<UserDto>
+                    {
+                        Success = true,
+                        Message = "Login successful",
+                        Data = new UserDto
+                        {
+                            Id = user.Id,
+                            Name = user.Name,
+                            Email = user.Email,
+                            Phone = user.Phone
+                        },
+                        Token = tokenString
+                    });
+                }
+                return BadRequest(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "Invalid credentials"
+                });
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "Something went wrong: "+e.Message
+                });
+            }
         }
 
         [Authorize]
@@ -119,7 +197,7 @@ namespace TodoApi.Controllers
             }
         }
 
-        [Authorize]
+        // [Authorize]
         [HttpPost]
         public async Task<IActionResult> Add(User user)
         {

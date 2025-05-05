@@ -29,5 +29,5 @@ public class User
     [BsonElement("phone")]
     [Required]
     [Range(1000000000, 9999999999)]
-    public int Phone { get; set; }
+    public long Phone { get; set; }
 }
