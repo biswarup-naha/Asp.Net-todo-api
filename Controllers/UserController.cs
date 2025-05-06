@@ -49,24 +49,7 @@ namespace TodoApi.Controllers
     
                 await _userService.Add(user);
 
-                var claims = new List<Claim>
-                    {
-                        new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
-                        new Claim(JwtRegisteredClaimNames.Jti, new Guid().ToString()),
-                        new Claim("UserId", user.Id.ToString()),
-                        new Claim("Email", user.Email.ToString()),
-                        new Claim("Name", user.Name.ToString()),
-                        new Claim("Phone", user.Phone.ToString())
-                    };
-
-                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]));
-                var token = new JwtSecurityToken(
-                    issuer: _configuration["Jwt:Issuer"],
-                    audience: _configuration["Jwt:Audience"],
-                    claims,
-                    expires: DateTime.UtcNow.AddMinutes(int.Parse(_configuration["Jwt:ExpiryInMinutes"])), signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
-                    );
-                var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+                var token = TokenUtil.GenerateJwtToken(user, _configuration);
 
                 return Ok(new ApiResponse<UserDto>
                 {
@@ -79,7 +62,7 @@ namespace TodoApi.Controllers
                         Email = user.Email,
                         Phone = user.Phone
                     },
-                    Token = tokenString
+                    Token = token
                 });
             }
             catch (System.Exception e)
@@ -100,24 +83,7 @@ namespace TodoApi.Controllers
                 var user = await _userService.GetByEmail(loginDto.Email);
                 if (user != null && _userService.CheckPassword(user, loginDto.Password))
                 {
-                    var claims = new List<Claim>
-                    {
-                        new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
-                        new Claim(JwtRegisteredClaimNames.Jti, new Guid().ToString()),
-                        new Claim("UserId", user.Id.ToString()),
-                        new Claim("Email", user.Email.ToString()),
-                        new Claim("Name", user.Name.ToString()),
-                        new Claim("Phone", user.Phone.ToString())
-                    };
-    
-                    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]));
-                    var token = new JwtSecurityToken(
-                        issuer: _configuration["Jwt:Issuer"],
-                        audience: _configuration["Jwt:Audience"],
-                        claims,
-                        expires: DateTime.UtcNow.AddMinutes(int.Parse(_configuration["Jwt:ExpiryInMinutes"])), signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
-                        );
-                    var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+                    var token = TokenUtil.GenerateJwtToken(user, _configuration);
     
                     return Ok(new ApiResponse<UserDto>
                     {
@@ -130,7 +96,7 @@ namespace TodoApi.Controllers
                             Email = user.Email,
                             Phone = user.Phone
                         },
-                        Token = tokenString
+                        Token = token
                     });
                 }
                 return BadRequest(new ApiResponse<string>

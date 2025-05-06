@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TodoApi.Models;
@@ -70,6 +72,17 @@ namespace TodoApi.Controllers
         {
             try
             {
+
+                var userId=User.FindFirstValue("_id");
+                if (userId == null)
+                {
+                    return BadRequest(new ApiResponse<Todo>
+                    {
+                        Success = false,
+                        Message = "Unauthorized"
+                    });
+                }
+                todo.User=userId;
                 await _todoService.Add(todo);
                 return Ok(new ApiResponse<Todo>
                 {
