@@ -1,8 +1,8 @@
 using System;
 
-namespace TodoApi.Models;
+namespace TodoApi.Dtos;
 
-public class UserDto
+public record class UserDto
 {
     public string? Id { get; set; }
     public string? Name { get; set; }

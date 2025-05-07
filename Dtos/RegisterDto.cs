@@ -1,9 +1,9 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace TodoApi.Models;
+namespace TodoApi.Dtos;
 
-public class RegisterDto
+public record class RegisterDto
 {
     [Required]
     public string? Name { get; set; }
