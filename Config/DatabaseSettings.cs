@@ -1,6 +1,6 @@
 using System;
 
-namespace TodoApi.Models
+namespace TodoApi.Config
 {
     public class DatabaseSettings
     {

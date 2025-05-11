@@ -4,3 +4,8 @@ GET {{TodoApi_HostAddress}}
 Accept: application/json
 
 ###
+
+GET {{TodoApi_HostAddress}}/health
+Accept: application/json
+
+###

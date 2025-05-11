@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using TodoApi.Config;
 using TodoApi.Models;
 using TodoApi.Services;
 
@@ -69,6 +70,21 @@ builder.Services.AddSwaggerGen(options =>
             Url = new Uri("https://www.github.com/biswarup-naha")
         }
     });
+
+    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
 });
 
 
@@ -93,6 +109,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-app.MapGet("/", ()=> Results.Redirect("/swagger"));
+app.MapGet("/", () => "Hello world");
+app.MapGet("/health", () => Results.Ok());
 
 app.Run();
